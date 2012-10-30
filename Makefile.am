@@ -1,6 +1,7 @@
 # $Id$
 
 SUBDIRS = \
+	cursors \
 	dialogs \
 	xfce4-settings-manager \
 	xfce4-settings-editor \
