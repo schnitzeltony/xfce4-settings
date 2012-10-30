@@ -170,6 +170,7 @@ dnl *** Optional support for Xcursor ***
 dnl ************************************
 XDT_CHECK_OPTIONAL_PACKAGE([XCURSOR], [xcursor], [1.1.0],
                            [xcursor], [Cursor themes support])
+AC_SUBST(cursordir, "\${datadir}/icons/xfce-invisible/cursors")
 
 dnl *************************************************
 dnl *** Optional support for libinput Xorg driver ***
@@ -265,6 +266,7 @@ AC_SUBST([PLATFORM_LDFLAGS])
 AC_OUTPUT([
 Makefile
 po/Makefile.in
+cursors/Makefile
 dialogs/Makefile
 dialogs/appearance-settings/Makefile
 dialogs/accessibility-settings/Makefile
