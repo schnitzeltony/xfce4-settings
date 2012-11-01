@@ -1149,6 +1149,50 @@ mouse_settings_device_set_enabled (GtkToggleButton *button,
 
 
 
+#ifdef HAVE_XCURSOR
+static void
+mouse_settings_on_touchscreen_pointer (GtkToggleButton *button,
+                                       GtkBuilder      *builder)
+{
+    gchar    *name = NULL;
+    gchar    *prop;
+    gboolean  enabled;
+
+    if (locked > 0)
+        return;
+
+    if (mouse_settings_device_get_selected (builder, NULL, &name))
+    {
+        enabled = gtk_toggle_button_get_active (button);
+        prop = g_strconcat ("/", name, "/TouchscreenPointer", NULL);
+        xfconf_channel_set_bool (pointers_channel, prop, enabled);
+        g_free (prop);
+    }
+    g_free (name);
+}
+
+static void
+mouse_settings_set_touchscreen_pointer (GtkBuilder *builder)
+{
+    gchar           *name = NULL;
+    gchar           *prop;
+    gboolean         enabled;
+    GtkToggleButton *button;
+
+    if (mouse_settings_device_get_selected (builder, NULL, &name))
+    {
+        button = GTK_TOGGLE_BUTTON (gtk_builder_get_object (builder, "touchscreen-pointer"));
+        prop = g_strconcat ("/", name, "/TouchscreenPointer", NULL);
+        enabled = xfconf_channel_get_bool (pointers_channel, prop, FALSE);
+        gtk_toggle_button_set_active (button, enabled);
+        g_free (prop);
+    }
+    g_free (name);
+}
+#endif
+
+
+
 static void
 mouse_settings_device_selection_changed (GtkBuilder *builder)
 {
@@ -1209,6 +1253,9 @@ mouse_settings_device_selection_changed (GtkBuilder *builder)
     /* get the selected item */
     if (mouse_settings_device_get_selected (builder, &device, NULL))
     {
+#ifdef HAVE_XCURSOR
+        mouse_settings_set_touchscreen_pointer (builder);
+#endif
         gdk_error_trap_push ();
         device_info = XListInputDevices (xdisplay, &ndevices);
         if (gdk_error_trap_pop () == 0 && device_info != NULL)
@@ -2023,11 +2070,20 @@ main (gint argc, gchar **argv)
             /* populate the themes treeview */
             mouse_settings_themes_populate_store (builder);
 
+            /* connect & fill touchscreen-pointer */
+            object = gtk_builder_get_object (builder, "touchscreen-pointer");
+            g_signal_connect (G_OBJECT (object), "toggled",
+                              G_CALLBACK (mouse_settings_on_touchscreen_pointer), builder);
+            mouse_settings_set_touchscreen_pointer (builder);
+
             /* connect the cursor size in the cursor tab */
             object = gtk_builder_get_object (builder, "theme-cursor-size");
             xfconf_g_property_bind (xsettings_channel, "/Gtk/CursorThemeSize",
                                     G_TYPE_INT, G_OBJECT (object), "value");
 #else
+            /* hide touchscreen-pointer */
+            object = gtk_builder_get_object (builder, "touchscreen-pointer");
+            gtk_widget_hide (GTK_WIDGET (object));
             /* hide the themes tab */
             object = gtk_builder_get_object (builder, "themes-hbox");
             gtk_widget_hide (GTK_WIDGET (object));
