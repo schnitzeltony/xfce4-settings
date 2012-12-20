@@ -37,5 +37,6 @@
     <property name="CursorThemeName" type="string" value=""/>
     <property name="CursorThemeSize" type="int" value="0"/>
     <property name="DecorationLayout" type="string" value="menu:minimize,maximize,close"/>
+    <property name="TouchscreenMode" type="bool" value="false"/>
   </property>
 </channel>
