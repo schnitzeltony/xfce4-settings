@@ -73,10 +73,27 @@ dnl ******************************
 XDT_I18N([@LINGUAS@])
 
 dnl ***********************************
+dnl *** gtk3 selection ***
+dnl ***********************************
+AC_ARG_WITH([gtk3],
+            [AS_HELP_STRING([--with-gtk3],
+              [enable gtk3 support])],
+            [],
+            [with_gtk3=no])
+if test x"$with_gtk3" = x"yes"; then
+  AC_DEFINE([WITH_GTK3], [1], [gtk3 support])
+  WITH_GTK3=1
+fi
+
+dnl ***********************************
 dnl *** Check for required packages ***
 dnl ***********************************
 XDT_CHECK_PACKAGE([EXO], [exo-1], [0.7.1])
-XDT_CHECK_PACKAGE([GTK], [gtk+-2.0], [2.20.0])
+if test x"$with_gtk3" = x"yes"; then
+  XDT_CHECK_PACKAGE([GTK], [gtk+-3.0], [3.0.0])
+else
+  XDT_CHECK_PACKAGE([GTK], [gtk+-2.0], [2.20.0])
+fi
 XDT_CHECK_PACKAGE([GLIB], [glib-2.0], [2.24.0])
 XDT_CHECK_PACKAGE([GIO], [gio-2.0], [2.24.0])
 XDT_CHECK_PACKAGE([GARCON], [garcon-1], [0.1.10])
@@ -269,6 +286,7 @@ echo "Build Configuration:"
 echo
 echo "* Installation prefix:       $prefix"
 echo "* Debug Support:             $enable_debug"
+echo "* gtk3 Support:              $with_gtk3"
 if test x"$XRANDR_FOUND" = x"yes"; then
 echo "* Xrandr support:            yes"
 else
