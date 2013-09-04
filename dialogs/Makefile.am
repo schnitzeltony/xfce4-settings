@@ -13,3 +13,8 @@ if HAVE_GIO_UNIX
 SUBDIRS += \
 	mime-settings
 endif
+
+if HAVE_DATETIME_SETTINGS
+SUBDIRS += \
+	datetime-settings
+endif
