@@ -215,6 +215,20 @@ if test x"$enable_sound_settings" = x"yes"; then
 fi
 AC_SUBST(ENABLE_SOUND_SETTINGS)
 
+dnl ****************************************
+dnl *** Optional build datetime-settings ***
+dnl ****************************************
+
+if test x"$GIO_UNIX_FOUND" = x"yes"; then
+  dnl Datetime settings
+  AC_ARG_ENABLE([datetime-settings],
+                [AC_HELP_STRING([--enable-datetime-settings],
+                                [Enable datetime settings in GUI (from systemd-timedated) (default=no)])],
+                [enable_datetime_settings=$enableval],
+                [enable_datetime_settings=no])
+fi
+AM_CONDITIONAL([HAVE_DATETIME_SETTINGS], [test x"$enable_datetime_settings" = x"yes"])
+
 dnl ******************************
 dnl *** Set helper path prefix ***
 dnl ******************************
@@ -255,6 +269,9 @@ dialogs/Makefile
 dialogs/appearance-settings/Makefile
 dialogs/accessibility-settings/Makefile
 dialogs/display-settings/Makefile
+dialogs/datetime-settings/Makefile
+dialogs/datetime-settings/xfce-datetime.desktop.in
+dialogs/datetime-settings/po-timezones/Makefile
 dialogs/keyboard-settings/Makefile
 dialogs/mime-settings/Makefile
 dialogs/mouse-settings/Makefile
@@ -315,6 +332,11 @@ if test x"$GIO_UNIX_FOUND" = x"yes"; then
 echo "* Mime settings (gio-unix):  yes"
 else
 echo "* Mime settings (gio-unix):  no"
+fi
+if test x"$enable_datetime_settings" = x"yes"; then
+echo "* Datetime settings support: yes"
+else
+echo "* Datetime settings support: no"
 fi
 echo
 
