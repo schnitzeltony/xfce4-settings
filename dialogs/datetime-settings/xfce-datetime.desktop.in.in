@@ -1,0 +1,13 @@
+[Desktop Entry]
+_Name=Date & Time
+_Comment=Change the date and time, including time zone
+Exec=xfce4-datetime-settings
+Icon=preferences-system-time
+Terminal=false
+Type=Application
+Categories=XFCE;GTK;Settings;DesktopSettings;X-XFCE-SettingsDialog;X-XFCE-HardwareSettings;
+StartupNotify=true
+OnlyShowIn=XFCE;
+X-XfcePluggable=true
+# Translators: those are keywords for the date and time control-center panel
+_Keywords=Clock;Timezone;Location;
