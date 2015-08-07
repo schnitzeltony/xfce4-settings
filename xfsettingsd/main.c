@@ -316,7 +316,7 @@ main (gint argc, gchar **argv)
 #ifdef HAVE_XRANDR
     displays_helper = g_object_new (XFCE_TYPE_DISPLAYS_HELPER, NULL);
 #endif
-    pointer_helper = g_object_new (XFCE_TYPE_POINTERS_HELPER, NULL);
+    pointer_helper = g_object_new (XFCE_TYPE_POINTERS_HELPER, "xsettings-helper", xsettings_helper, NULL);
     keyboards_helper = g_object_new (XFCE_TYPE_KEYBOARDS_HELPER, NULL);
     accessibility_helper = g_object_new (XFCE_TYPE_ACCESSIBILITY_HELPER, NULL);
     shortcuts_helper = g_object_new (XFCE_TYPE_KEYBOARD_SHORTCUTS_HELPER, NULL);
