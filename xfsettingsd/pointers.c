@@ -49,12 +49,20 @@
 #define MAX_DENOMINATOR (100.00)
 #define XFCONF_TYPE_G_VALUE_ARRAY (dbus_g_type_get_collection ("GPtrArray", G_TYPE_VALUE))
 
+/* Property identifiers */
+enum
+{
+  PROP_0,
+  PROP_XSETTINGS_HELPER,
+};
+
 #ifdef XI_PROP_ENABLED
 #define DEVICE_ENABLED XI_PROP_ENABLED
 #else
 #define DEVICE_ENABLED "Device Enabled"
 #endif /* XI_PROP_ENABLED */
 
+static void             xfce_pointers_helper_constructed              (GObject            *object);
 static void             xfce_pointers_helper_finalize                 (GObject            *object);
 static void             xfce_pointers_helper_syndaemon_stop           (XfcePointersHelper *helper);
 static void             xfce_pointers_helper_syndaemon_check          (XfcePointersHelper *helper);
@@ -69,6 +77,10 @@ static GdkFilterReturn  xfce_pointers_helper_event_filter             (GdkXEvent
                                                                        GdkEvent           *gdk_event,
                                                                        gpointer            user_data);
 #endif
+static void             xfce_pointers_helper_set_property             (GObject              *object,
+                                                                       guint                 prop_id,
+                                                                       const GValue         *value,
+                                                                       GParamSpec           *pspec);
 #if defined(DEVICE_PROPERTIES) || defined(HAVE_LIBINPUT)
 static void             xfce_pointers_helper_change_property          (XDeviceInfo        *device_info,
                                                                        XDevice            *device,
@@ -87,6 +99,8 @@ struct _XfcePointersHelperClass
 struct _XfcePointersHelper
 {
     GObject  __parent__;
+
+    GObject       *xsettings_helper;
 
     /* xfconf channel */
     XfconfChannel *channel;
@@ -121,7 +135,18 @@ xfce_pointers_helper_class_init (XfcePointersHelperClass *klass)
 {
     GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
+    gobject_class->constructed = xfce_pointers_helper_constructed;
     gobject_class->finalize = xfce_pointers_helper_finalize;
+    gobject_class->set_property = xfce_pointers_helper_set_property;
+
+    g_object_class_install_property (gobject_class,
+                                     PROP_XSETTINGS_HELPER,
+                                     g_param_spec_object ("xsettings-helper",
+                                                          "xsettings-helper",
+                                                          "xsettings-helper",
+                                                          G_TYPE_OBJECT,
+                                                          G_PARAM_CONSTRUCT_ONLY |
+                                                          G_PARAM_WRITABLE));
 }
 
 
@@ -129,6 +154,15 @@ xfce_pointers_helper_class_init (XfcePointersHelperClass *klass)
 static void
 xfce_pointers_helper_init (XfcePointersHelper *helper)
 {
+  /* All initialisation is done at xfce_pointers_helper_constructed */
+}
+
+
+
+static void
+xfce_pointers_helper_constructed (GObject *object)
+{
+    XfcePointersHelper *helper = XFCE_POINTERS_HELPER (object);
     XExtensionVersion *version = NULL;
     Display           *xdisplay;
 #ifdef DEVICE_HOTPLUGGING
@@ -188,6 +222,27 @@ xfce_pointers_helper_init (XfcePointersHelper *helper)
                 g_warning ("Failed to create device filter");
         }
 #endif
+    }
+}
+
+
+
+static void
+xfce_pointers_helper_set_property (GObject      *object,
+                                   guint         prop_id,
+                                   const GValue *value,
+                                   GParamSpec   *pspec)
+{
+    XfcePointersHelper *helper = XFCE_POINTERS_HELPER (object);
+
+    switch (prop_id)
+    {
+        case PROP_XSETTINGS_HELPER:
+            helper->xsettings_helper = g_value_get_object (value);
+            break;
+        default:
+            G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+            break;
     }
 }
 
