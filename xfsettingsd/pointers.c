@@ -1,3 +1,4 @@
+
 /*
  *  Copyright (c) 2008-2011 Nick Schermer <nick@xfce.org>
  *
@@ -1040,7 +1041,7 @@ xfce_pointers_helper_restore_devices (XfcePointersHelper *helper,
     XDeviceInfo           *device_list, *device_info;
     gint                   n, ndevices;
     XDevice               *device;
-    XfcePointerDeviceData *device_data;
+    XfcePointerDeviceData *device_data = NULL;
     gchar                 *device_name;
     gchar                  prop[256];
     gboolean               right_handed;
