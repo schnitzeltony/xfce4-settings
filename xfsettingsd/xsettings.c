@@ -123,6 +123,7 @@ struct _XfceXSettingsHelper
     gulong         serial;
 
     /* idle notifications */
+    gboolean       notify_later;
     guint          notify_idle_id;
     guint          notify_xft_idle_id;
 
@@ -422,6 +423,12 @@ xfce_xsettings_helper_notify_xft_idle (gpointer data)
 
     helper->notify_xft_idle_id = 0;
 
+    if (helper->notify_later && helper->notify_idle_id == 0)
+    {
+        helper->notify_later = FALSE;
+        helper->notify_idle_id = g_idle_add (xfce_xsettings_helper_notify_idle, helper);
+    }
+
     return FALSE;
 }
 
@@ -467,8 +474,7 @@ xfce_xsettings_helper_set_property (GObject      *object,
               if (G_LIKELY (setting_touchscreen != NULL || setting_theme != NULL))
               {
                   /* schedule xsettings update */
-                  if (helper->notify_idle_id == 0)
-                      helper->notify_idle_id = g_idle_add (xfce_xsettings_helper_notify_idle, helper);
+                  helper->notify_later = TRUE;
                   if (helper->notify_xft_idle_id == 0)
                       helper->notify_xft_idle_id = g_idle_add (xfce_xsettings_helper_notify_xft_idle, helper);
               }
@@ -612,17 +618,17 @@ xfce_xsettings_helper_prop_changed (XfconfChannel       *channel,
         g_hash_table_remove (helper->settings, prop_name);
     }
 
-    if (helper->notify_idle_id == 0)
+    /* xsettings update? */
+    if (g_str_has_prefix (prop_name, "/Xft/") || g_str_has_prefix (prop_name, "/Gtk/CursorTheme"))
+    {
+        helper->notify_later = TRUE;
+        if (helper->notify_xft_idle_id == 0)
+            helper->notify_xft_idle_id = g_idle_add (xfce_xsettings_helper_notify_xft_idle, helper);
+    }
+    else if (helper->notify_idle_id == 0)
     {
         /* schedule an update */
         helper->notify_idle_id = g_idle_add (xfce_xsettings_helper_notify_idle, helper);
-    }
-
-    if (helper->notify_xft_idle_id == 0
-        && (g_str_has_prefix (prop_name, "/Xft/")
-            || g_str_has_prefix (prop_name, "/Gtk/CursorTheme")))
-    {
-        helper->notify_xft_idle_id = g_idle_add (xfce_xsettings_helper_notify_xft_idle, helper);
     }
 }
 
