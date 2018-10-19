@@ -123,6 +123,7 @@ struct _XfceXSettingsHelper
     gulong         serial;
 
     /* idle notifications */
+    gboolean       notify_xft_later;
     guint          notify_idle_id;
     guint          notify_xft_idle_id;
 
@@ -396,6 +397,23 @@ xfce_xsettings_helper_fc_init (gpointer data)
 
 
 static gboolean
+xfce_xsettings_helper_notify_xft_idle (gpointer data)
+{
+    XfceXSettingsHelper *helper = XFCE_XSETTINGS_HELPER (data);
+
+    /* only update if there are screen registered */
+    if (helper->screens != NULL)
+        xfce_xsettings_helper_notify_xft (helper);
+
+    helper->notify_xft_idle_id = 0;
+    helper->notify_xft_later = FALSE;
+
+    return FALSE;
+}
+
+
+
+static gboolean
 xfce_xsettings_helper_notify_idle (gpointer data)
 {
     XfceXSettingsHelper *helper = XFCE_XSETTINGS_HELPER (data);
@@ -406,21 +424,8 @@ xfce_xsettings_helper_notify_idle (gpointer data)
 
     helper->notify_idle_id = 0;
 
-    return FALSE;
-}
-
-
-
-static gboolean
-xfce_xsettings_helper_notify_xft_idle (gpointer data)
-{
-    XfceXSettingsHelper *helper = XFCE_XSETTINGS_HELPER (data);
-
-    /* only update if there are screen registered */
-    if (helper->screens != NULL)
-        xfce_xsettings_helper_notify_xft (helper);
-
-    helper->notify_xft_idle_id = 0;
+    if (helper->notify_xft_later && helper->notify_xft_idle_id == 0)
+        helper->notify_xft_idle_id = g_idle_add (xfce_xsettings_helper_notify_xft_idle, helper);
 
     return FALSE;
 }
@@ -467,10 +472,9 @@ xfce_xsettings_helper_set_property (GObject      *object,
               if (G_LIKELY (setting_touchscreen != NULL || setting_theme != NULL))
               {
                   /* schedule xsettings update */
+                  helper->notify_xft_later = TRUE;
                   if (helper->notify_idle_id == 0)
                       helper->notify_idle_id = g_idle_add (xfce_xsettings_helper_notify_idle, helper);
-                  if (helper->notify_xft_idle_id == 0)
-                      helper->notify_xft_idle_id = g_idle_add (xfce_xsettings_helper_notify_xft_idle, helper);
               }
           }
       break;
@@ -612,17 +616,14 @@ xfce_xsettings_helper_prop_changed (XfconfChannel       *channel,
         g_hash_table_remove (helper->settings, prop_name);
     }
 
+    /* xsettings update? */
+    if (g_str_has_prefix (prop_name, "/Xft/") || g_str_has_prefix (prop_name, "/Gtk/CursorTheme"))
+        helper->notify_xft_later = TRUE;
+
     if (helper->notify_idle_id == 0)
     {
         /* schedule an update */
         helper->notify_idle_id = g_idle_add (xfce_xsettings_helper_notify_idle, helper);
-    }
-
-    if (helper->notify_xft_idle_id == 0
-        && (g_str_has_prefix (prop_name, "/Xft/")
-            || g_str_has_prefix (prop_name, "/Gtk/CursorTheme")))
-    {
-        helper->notify_xft_idle_id = g_idle_add (xfce_xsettings_helper_notify_xft_idle, helper);
     }
 }
 
